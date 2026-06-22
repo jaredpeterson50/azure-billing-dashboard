@@ -78,8 +78,9 @@ Because the workflow does not set `environment:`, only repository-level variable
 4. Select **Deploy to Azure**.
 5. Click **Run workflow**.
 
-The workflow will:
+The workflow uses temporary local Terraform state on the GitHub runner. Before planning, it attempts to import the known resource group, storage account, and budget if they already exist. This makes reruns work for the demo project. For production, move Terraform state to a remote backend such as Azure Storage.
 
+The workflow will:
 - authenticate to Azure with OIDC
 - run Terraform
 - export the resource group and storage account from Terraform outputs

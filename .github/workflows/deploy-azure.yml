@@ -53,6 +53,39 @@ jobs:
       - name: Terraform init
         run: terraform -chdir=infra init
 
+      - name: Import existing Terraform resources
+        shell: pwsh
+        run: |
+          function Import-TerraformResource {
+            param(
+              [string]$Address,
+              [string]$ResourceId
+            )
+
+            "Importing $Address if it already exists."
+            terraform -chdir=infra import $Address $ResourceId
+            if ($LASTEXITCODE -ne 0) {
+              "Import skipped for $Address. It may not exist yet or may already be managed in this run."
+            }
+          }
+
+          $subscriptionId = "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          $resourceGroup = "${{ vars.AZURE_RESOURCE_GROUP }}"
+          $storageAccount = "${{ vars.AZURE_STORAGE_ACCOUNT }}"
+          $budgetName = "azure-billing-dashboard-monthly-budget"
+
+          Import-TerraformResource `
+            -Address "azurerm_resource_group.dashboard" `
+            -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+
+          Import-TerraformResource `
+            -Address "azurerm_storage_account.dashboard" `
+            -ResourceId "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup/providers/Microsoft.Storage/storageAccounts/$storageAccount"
+
+          Import-TerraformResource `
+            -Address "azurerm_consumption_budget_subscription.monthly_cost_guard" `
+            -ResourceId "/subscriptions/$subscriptionId/providers/Microsoft.Consumption/budgets/$budgetName"
+
       - name: Terraform plan
         run: terraform -chdir=infra plan -out=tfplan
 
