@@ -41,7 +41,6 @@ $data = @{
   currency = [string]$row[1]
   periodLabel = $periodLabel
   source = "azure-cost-management"
-  subscriptionId = $SubscriptionId
   refreshedAt = (Get-Date).ToUniversalTime().ToString("o")
 } | ConvertTo-Json -Depth 4
 
