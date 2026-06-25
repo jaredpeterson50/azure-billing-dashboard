@@ -14,6 +14,8 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
+data "azurerm_client_config" "current" {}
+
 locals {
   common_tags = merge(var.tags, {
     Project     = "azure-billing-dashboard"
@@ -45,7 +47,14 @@ resource "azurerm_storage_account" "dashboard" {
     index_document     = "index.html"
     error_404_document = "index.html"
   }
+
   tags = local.common_tags
+}
+
+resource "azurerm_role_assignment" "storage_blob_data_contributor" {
+  scope                = azurerm_storage_account.dashboard.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_consumption_budget_subscription" "monthly_cost_guard" {
